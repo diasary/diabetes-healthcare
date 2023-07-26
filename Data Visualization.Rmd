@@ -1,0 +1,220 @@
+---
+title: "Data Analysis Visualization"
+subtitle: "diabetes-healthcare"
+author: "Diyas Arya Nugroho"
+date:  "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  rmdformats::robobook:   # https://github,com/juba/rmdformats
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    lib_dir: libs
+    df_print: "pagedc"
+    code_folding: "show"
+    code_download: no
+    css: "style.css"
+
+---
+
+<br>
+
+<img style="float: right; margin: -50px 50px 0px 50px; width:30%" src="Profil.png"/>
+
+
+|
+:---- |:----
+**Kontak**| **: $\downarrow$**
+Email | diyasaryanugroho@gmail.com
+Instagram | https://www.instagram.com/diasary_nm/ 
+RPubs  | https://rpubs.com/diyasarya/ 
+Github | https://github.com/diasary/
+
+***
+
+```{r message=FALSE, warning=FALSE}
+library(caret)
+library(reshape2)
+library(plotly)
+library(ggplot2)
+```
+
+
+## Import Data
+
+```{r}
+diabetes <- read.csv("diabetes.csv")
+diabetes
+```
+
+## Correlation data visualization
+
+```{r}
+# compute the correlation matrix
+cormat <- round(cor(diabetes),2)
+head(cormat)
+```
+
+```{r}
+# melt the correlation matrix to make heatmap ggplot
+melted_cormat <- melt(cormat)
+head(melted_cormat)
+```
+
+```{r}
+# Get lower triangle of the correlation matrix
+  get_lower_tri<-function(cormat){
+    cormat[upper.tri(cormat)] <- NA
+    return(cormat)
+  }
+# Get upper triangle of the correlation matrix
+  get_upper_tri <- function(cormat){
+    cormat[lower.tri(cormat)]<- NA
+    return(cormat)
+  }
+```
+
+
+```{r}
+reorder_cormat <- function(cormat){
+# Use correlation between variables as distance
+dd <- as.dist((1-cormat)/2)
+hc <- hclust(dd)
+cormat <-cormat[hc$order, hc$order]
+}
+# Reorder the correlation matrix
+cormat <- reorder_cormat(cormat)
+upper_tri <- get_upper_tri(cormat)
+# Melt the correlation matrix
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+# Create a ggheatmap
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+ geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+    name="Pearson\nCorrelation") +
+  theme_minimal()+ # minimal theme
+ theme(axis.text.x = element_text(angle = 90, vjust = 1, 
+    size = 12, hjust = 1))+
+ coord_fixed()
+# Add the text of correlation on heatmap
+ggheatmap + 
+geom_text(aes(Var2, Var1, label = value), color = "black", size = 2) +
+theme(
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.border = element_blank(),
+  panel.background = element_blank(),
+  axis.ticks = element_blank(),
+  legend.justification = c(1, 0),
+  legend.position = c(0.7, 0.7),
+  legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                title.position = "bottom", title.hjust = 0.5))
+
+```
+
+## Data Visualization
+
+
+```{r message=FALSE, warning=FALSE}
+# Scater plot of Glucose vs Age with Class by outcome
+pal <- c("red", "blue")
+pal <- setNames(pal, c("0", "1"))
+
+fig <- plot_ly(data = diabetes, x = ~Age, y = ~Glucose, color = ~Outcome, colors = pal) 
+
+fig
+```
+
+```{r}
+# Scatter plot of Insulin vs Glucose with Class by Outcome
+base <- ggplot(diabetes, aes(Glucose, Insulin, color = factor(Outcome))) +
+  geom_jitter() 
+
+labelled <- base +
+  labs(
+    x = "Glucose",
+    y = "Insulin",
+    colour = "Outcome",
+    title = "Insulin Vs Glucose"
+  ) +
+  scale_colour_brewer(type = "seq", palette = "Spectral")
+
+fig <- ggplotly(labelled)
+
+fig
+
+```
+
+### Visualization Regression
+
+```{r}
+# Regression of the high correlation (Glucose Vs Age)
+plot(Glucose ~ Age, data = diabetes, col = "dodgerblue", pch = 20, cex = 1.5)
+fit = lm(Glucose ~ Age, data = diabetes)
+abline(fit, col = "darkorange", lwd = 3)
+```
+
+```{r}
+# Scatter of the high correlation (Insulin Vs Glucose)
+plot(Insulin ~ Glucose, data = diabetes, col = "red", pch = 20, cex = 1.5)
+fit = lm(Insulin ~ Glucose, data = diabetes)
+abline(fit, col = "black", lwd = 4)
+```
+
+## Prediction 
+
+```{r}
+str(diabetes)
+
+set.seed(12)
+
+indexes = createDataPartition(diabetes$Glucose, p = .85, list = F)
+train = diabetes[indexes, ]
+test = diabetes[-indexes, ]
+
+train_x = train[, -9]
+train_x = scale(train_x)[,]
+train_y = train[, 9]
+
+test_x = test[, -9]
+test_x = scale(test[,-9])[,]
+test_y = test[,9]
+```
+
+```{r}
+# KNN Regression model
+knnmodel = knnreg(train_x, train_y)
+ 
+str(knnmodel)
+```
+
+### Accuracy Checking
+
+```{r}
+pred_y = predict(knnmodel, data.frame(test_x))
+data = data.frame(test_y, pred_y)
+
+mse = mean((test_y - pred_y)^2)
+mae = caret::MAE(test_y, pred_y)
+rmse = caret::RMSE(test_y, pred_y)
+
+cat("MSE: ", mse, "MAE: ", mae, " RMSE: ", rmse)
+```
+
+### Prediction Visualization
+
+```{r}
+x = 1:length(test_y)
+
+plot(x, test_y, col = "red", type = "l", lwd=2,
+     main = "Patient Diabetes test data prediction")
+lines(x, pred_y, col = "blue", lwd=2)
+legend("topright",  legend = c("original", "predicted"), 
+       fill = c("red", "blue"), col = 2:3,  adj = c(0, 0.6))
+grid()
+```
+
+
