@@ -1,0 +1,160 @@
+---
+title: "Query SQL"
+subtitle: "diabetes-healthcare"
+author: "Diyas Arya Nugroho"
+date:  "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  rmdformats::robobook:   # https://github,com/juba/rmdformats
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    lib_dir: libs
+    df_print: "pagedc"
+    code_folding: "show"
+    code_download: no
+    css: "style.css"
+
+---
+
+<br>
+
+<img style="float: right; margin: -50px 50px 0px 50px; width:30%" src="Profil.png"/>
+
+
+|
+:---- |:----
+**Kontak**| **: $\downarrow$**
+Email | diyasaryanugroho@gmail.com
+Instagram | https://www.instagram.com/diasary_nm/ 
+RPubs  | https://rpubs.com/diyasarya/ 
+Github | https://github.com/diasary/
+
+***
+
+```{r}
+# set up the connection and save it into the workspace
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+library(RMySQL)
+library(DBI)
+diyas <- dbConnect(RMySQL::MySQL(),
+                   dbname='diabetes',
+                   username='root',
+                   password='',
+                   host='localhost',
+                   port=3306)
+knitr::opts_chunk$set(connection = "diyas")  #set up the connection
+```
+
+
+
+## Ques 1. The most patient has diabetes by age
+
+```{sql connection= diyas}
+SELECT Age, Count(Age) 'the patient has diabetes'
+FROM `health_care_diabetes`
+GROUP BY Age
+ORDER BY `the patient has diabetes` DESC
+LIMIT 10;
+```
+
+## Ques 2. Average pregnancy by age
+
+```{sql connection= diyas}
+SELECT Age, AVG(Pregnancies) 'avg of pregnancies'
+FROM `health_care_diabetes`
+GROUP BY Age;
+```
+
+## Ques 3. Distribution of each variabels
+
+### Pregnancies
+
+```{sql connection= diyas}
+SELECT Pregnancies, Count(Pregnancies) 'num of pregnancies'
+FROM `health_care_diabetes`
+GROUP BY Pregnancies;
+```
+
+### Glucose
+
+```{sql connection= diyas}
+SELECT Glucose, Count(Glucose) 'num of glucose'
+FROM `health_care_diabetes`
+GROUP BY Glucose;
+```
+
+### BloodPressure
+
+```{sql connection= diyas}
+SELECT BloodPressure, Count(BloodPressure) 'num of bloodpressure'
+FROM `health_care_diabetes`
+GROUP BY BloodPressure;
+```
+
+### SkinThickness
+
+```{sql connection= diyas}
+SELECT SkinThickness, Count(SkinThickness) 'num of skinthickness'
+FROM `health_care_diabetes`
+GROUP BY SkinThickness;
+```
+
+### Insulin
+
+```{sql connection= diyas}
+SELECT Insulin, Count(Insulin) 'num of insulin'
+FROM `health_care_diabetes`
+GROUP BY Insulin;
+```
+
+### BMI
+
+```{sql connection= diyas}
+SELECT BMI, Count(BMI) 'num of BMI'
+FROM `health_care_diabetes`
+GROUP BY BMI;
+```
+
+### DiabetesPedigreeFunction
+
+```{sql connection= diyas}
+SELECT DiabetesPedigreeFunction, Count(DiabetesPedigreeFunction) 'num of diabatespedigreefunction'
+FROM `health_care_diabetes`
+GROUP BY DiabetesPedigreeFunction;
+```
+
+### Age
+
+```{sql connection= diyas}
+SELECT Age, Count(Age) 'num of age'
+FROM `health_care_diabetes`
+GROUP BY Age;
+```
+
+
+### Outcome
+
+```{sql connection= diyas}
+SELECT Outcome, Count(Outcome) 'num of outcome'
+FROM `health_care_diabetes`
+GROUP BY Outcome;
+```
+
+## Ques 4. Probability of Pregnancies got a child with diabetes
+
+```{sql connection= diyas}
+SELECT Pregnancies, AVG(DiabetesPedigreeFunction) 'Probability of Diabetes'
+FROM `health_care_diabetes`
+GROUP BY Pregnancies
+ORDER BY `Probability of Diabetes` DESC;
+```
+
+
+## Ques 5. Information of patients by several medical predictor variabels
+
+```{sql connection= diyas}
+SELECT Outcome, AVG(Pregnancies) Pregnancies, AVG(Glucose) Glucose, AVG(BloodPressure) BloodPressure, AVG(SkinThickness) SkinThickness, AVG(Insulin) Insulin, AVG(BMI) BMI, AVG(DiabetesPedigreeFunction) DiabetesPedigreeFunction, AVG(Age) Age
+FROM `health_care_diabetes`
+GROUP BY Outcome;
+```
