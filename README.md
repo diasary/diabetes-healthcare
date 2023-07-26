@@ -41,3 +41,18 @@ There are 9 tables : *Pregnancies, Glucose, Blood Pressure, Skin Thickness, Insu
 ## Data Visualization
 
 *See the **[Flex Dashboard](https://rpubs.com/diyasarya/diabet)** on my R Publish.*
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Conclusion
+
+![Outcome Analysis Conclusion](Conclusion.png)
+
+**Insight** 
+
+Patient with Diabetes (1) have higher average of all variables compare to Patient without Diabetes (0). <br />
+But the most notable difference is Glucose level, Insulin level, and BMI. So, these could be important for predicting causes of Diabetes.
+
+**Recommendations**
+
+For the next generation, we should pay more attention to our Glocose level, Insulin level, and BMI so that we can avoid diabetes. 
