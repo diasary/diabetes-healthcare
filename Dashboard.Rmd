@@ -1,0 +1,106 @@
+---
+title: "diabetes-Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    theme: sandstone
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+# Importing libraries
+library(flexdashboard)
+library(tidyverse)
+library(highcharter)
+library(gt)
+library(htmltools)
+library(viridis)
+library(DT)
+library(ggplot2)
+library(sunburstR)
+library(lubridate)
+library(plotly)
+library(ggplot2)
+library(hrbrthemes)
+library(sjPlot)
+library(sjmisc)
+```
+
+```{r}
+diabetes <- read.csv("diabetes.csv")
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Patient with Diabetes {.value-box}
+
+```{r}
+patient <- 500
+gauge(patient, min = 0, max = 768, gaugeSectors(
+  success = c(0, 250), warning = c(251, 500), danger = c(501, 768)
+))
+```
+
+
+### Average Glucose {.value-box}
+
+```{r}
+glucose <- 120.89
+gauge(glucose, min = 0, max = 200, gaugeSectors(
+  success = c(0, 140), warning = c(141, 199), danger = c(200, 210)
+))
+```
+
+
+### Average Age {.value-box}
+
+```{r}
+age <- 33.24
+gauge(age, min = 0, max = 100, gaugeSectors(
+  success = c(0,39), warning = c(40, 79), danger = c(80, 100)
+))
+```
+
+Row {data-width=700}
+-----------------------------------------------------------------------
+    
+### Scater plot of Glucose vs Age with Class by outcome
+    
+```{r message=FALSE, warning=FALSE}
+pal <- c("red", "blue")
+pal <- setNames(pal, c("0", "1"))
+
+fig <- plot_ly(data = diabetes, x = ~Age, y = ~Glucose, color = ~Outcome, colors = pal) 
+
+fig
+
+```
+
+   
+Row {data-width=350}
+-----------------------------------------------------------------------
+    
+### Predict Values of Glucose
+    
+```{r message=FALSE, warning=FALSE}
+theme_set(theme_sjplot())
+
+# make categorical
+diabetes$Outcome <- to_factor(diabetes$Outcome)
+
+# fit model with interaction
+fit <- lm(Glucose ~ Age * Outcome * Pregnancies, data = diabetes)
+
+plot_model(fit, type = "pred", terms = c("Age", "Outcome", "Pregnancies"))
+```
+    
+### Glucose Histogram
+
+```{r}
+m<-mean(diabetes$Glucose)
+std<-sqrt(var(diabetes$Glucose)) 
+hist(diabetes$Glucose,prob=T,main="Glucose")
+curve(dnorm(x, mean=m, sd=std), col="darkblue", lwd=2, add=TRUE)
+```
+
